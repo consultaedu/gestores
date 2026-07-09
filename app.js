@@ -24,10 +24,7 @@ async function carregarDados() {
       return;
     }
 
-    dados = prepararDados(json.dados || []).map(item => ({
-      ...item,
-      data: formatarDataExibicao(item.data)
-    }));
+    dados = prepararDados(json.dados || []);
 
     montarAvisos(json.avisos || []);
     preencherSelect(instituicao, valoresUnicos(dados, "instituicao"));
@@ -48,6 +45,13 @@ function montarAvisos(lista) {
     div.innerHTML = `<strong>${aviso.titulo}</strong><br>${aviso.mensagem}`;
     avisos.appendChild(div);
   });
+}
+
+function prepararDados(lista) {
+  return lista.map(item => ({
+    ...item,
+    data: formatarDataExibicao(item.data)
+  }));
 }
 
 function valoresUnicos(lista, campo) {
@@ -179,7 +183,7 @@ function criarCard(item) {
     <span class="status-tag ${statusClasse}">${item.status || "Verificar"}</span>
     <h3>${item.aula || "Aula"}</h3>
     <div class="meta">
-      <strong>${item.data || "Data não informada"}</strong>
+      <strong>${item.data || "Data não informada"}</strong><br>
       ${item.disciplina || ""}<br>
       ${item.curso || ""}
     </div>
@@ -223,10 +227,21 @@ function ordenarPorAula(a, b) {
 function formatarDataExibicao(valor) {
   if (!valor) return "";
 
-  const texto = String(valor);
+  const texto = String(valor).trim();
 
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
     return texto;
+  }
+
+  if (/^\d{1,2}[\/.\-_\s]\d{1,2}[\/.\-_\s]\d{2,4}$/.test(texto)) {
+    const partes = texto.split(/[\/.\-_\s]+/);
+    let dia = partes[0].padStart(2, "0");
+    let mes = partes[1].padStart(2, "0");
+    let ano = partes[2];
+
+    if (ano.length === 2) ano = "20" + ano;
+
+    return `${dia}/${mes}/${ano}`;
   }
 
   if (/^\d{4}-\d{2}-\d{2}/.test(texto)) {
@@ -235,11 +250,4 @@ function formatarDataExibicao(valor) {
   }
 
   return texto;
-}
-
-function prepararDados(lista) {
-  return lista.map(item => ({
-    ...item,
-    data: formatarDataExibicao(item.data)
-  }));
 }
